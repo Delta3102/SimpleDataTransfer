@@ -11,6 +11,10 @@
 class Interface
 {
 public:
+    static void serv_clik(Fl_Widget *widget, void *data);
+    static void con_clik(Fl_Widget *widget, void *data);
+    static void tr_clik(Fl_Widget *widget, void *data);
+
     int run();
 };
 

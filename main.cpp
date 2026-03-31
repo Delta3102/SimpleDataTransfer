@@ -3,7 +3,6 @@
 #include "interface.hpp"
 
 int main(){
-    Client cl;
     RelayServer srv;
     Interface intr;
 
