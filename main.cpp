@@ -2,9 +2,8 @@
 #include "client.hpp"
 #include "interface.hpp"
 
+#include <iostream>
 int main(){
-    RelayServer srv;
     Interface intr;
-
     intr.run();
 }

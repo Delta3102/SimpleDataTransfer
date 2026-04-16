@@ -7,6 +7,7 @@
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Output.H>
 #include <FL/Fl_Box.H>
+#include <FL/Fl_Text_Display.H>
 
 class Interface
 {

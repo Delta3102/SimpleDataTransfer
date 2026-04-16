@@ -2,27 +2,23 @@
 #define RELAY_SERVER_HPP
 
 #include <boost/asio.hpp>
-#include <boost/asio/awaitable.hpp>
-#include <boost/asio/use_awaitable.hpp>
-#include <boost/asio/co_spawn.hpp>
+#include <FL/Fl_Text_Display.H>
 
 using namespace std;
 using namespace boost::asio;
-using boost::asio::awaitable;
-using boost::asio::use_awaitable;
 
 class RelayServer
 {
 private:
     io_context io;
+    size_t bt;
     char binBUFF[4096], refBUFF[4096];
 
+    void send_data(ip::tcp::socket &sock_inp, ip::tcp::socket &sock_out, Fl_Text_Buffer* &in, Fl_Text_Display *&di);
+    void relay(ip::tcp::acceptor &acpt_inp, ip::tcp::acceptor &acpt_out, ip::tcp::socket &sock_inp, ip::tcp::socket &sock_out, Fl_Text_Buffer* &in, Fl_Text_Display *&di);
+
 public:
-    boost::asio::awaitable<void> send_data(ip::tcp::socket &sock1, ip::tcp::socket &sock2);
-
-    boost::asio::awaitable<void> relay(ip::tcp::acceptor &acpt_inp, ip::tcp::acceptor &acpt_out, ip::tcp::socket &sock_inp, ip::tcp::socket &sock_out);
-
-    boost::asio::awaitable<void> run();
+    void run(Fl_Text_Buffer* &in, Fl_Text_Display *&di);
 };
 
 #endif

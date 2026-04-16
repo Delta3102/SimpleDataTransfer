@@ -1,71 +1,78 @@
 #include "client.hpp"
+
 #include <iostream>
 #include <boost/asio.hpp>
 #include <string>
 #include <fstream>
+#include <FL/Fl_Text_Display.H>
 
 using namespace std;
 using namespace boost::asio;
 
-void Client::ping(ip::tcp::socket &sock){
-}
-
-void Client::settings(){
-    cout << "IP Сервера: ";
-    cin >> ip_serv;
-    cout << endl;
-
-    cout << "Поместите файл в ту же папку что и приложение и напишите его имя" << endl;
-    cout << "Имя: ";
-    cin >> data;
-    cout << endl;
-}
-
-void Client::delivery(string& data){
-    ip::tcp::socket sock(io); // создание сокета и ресолвера
+void Client::transmissons(Fl_Text_Buffer* &in, Fl_Text_Display *&di){
+    // инициализация
+    ip::tcp::socket sock(io);
     ip::tcp::resolver rsl(io);
+    char tbuf[30];
 
-    i.open(data, ios::binary); // открытие файла
+    // отправка названия
+    write(sock, buffer(data_name.c_str(), data_name.size()));
+
+    // отправка файла
+    i.open(data_name, ios::binary);
     if (!i) return;
 
-    while(i){
-        i.read(BUFF, 4096);
-        cout << "Чтение" << endl;
-        cout << BUFF << endl;
+    async_connect(sock, rsl.resolve(ip_serv, "12090"), [this, &sock, &in, &tbuf, &di](const boost::system::error_code& ec, const ip::tcp::endpoint& endpoint){
+        snprintf(tbuf, sizeof(tbuf), "connect to \n", ip_serv);
+        in->append(tbuf);
+        di->redraw();
 
-        connect(sock, rsl.resolve(ip_serv, "12090")); // установка соединения (оч красивый порт)
-        cout << "Установка соединения" << endl;
+        while(i){
+            i.read(BUFF, 4096);
+            in->append("reading file\n");
+            di->redraw();
 
-        write(sock, buffer(BUFF, i.gcount()));
-        cout << "Отправка данных" << endl;
-    }
-
-    sock.close();
-}
-
-void Client::receiving(){
-    ip::tcp::socket sock(io); // создание сокета и ресолвера
-    ip::tcp::resolver rsl(io);
-    size_t size = 1;
-
-    o.open(data, ios::binary); // открытие файла
-
-    while(size != 0){
-        connect(sock, rsl.resolve(ip_serv, "12091")); // установка соединения (оч красивый порт)
-        cout << "Установка соединения" << endl;
-
-        size = sock.read_some(buffer(BUFF));
-        if(size == 0) {
-            break;
+            write(sock, buffer(BUFF, i.gcount()));
         }
-        cout << "Получение данных" << endl;
-        cout << BUFF << endl;
+        i.close();
+        in->append("send file success\n");
+        di->redraw();
+        });
 
-        o.write(BUFF, size);
-        cout << "Запись данных" << endl;
-        size = 0;
-    }
-    o.close();
+    io.run();
 
-    sock.close();
 }
+
+void Client::receiving(Fl_Text_Buffer* &in, Fl_Text_Display *&di){
+    // инициализация
+    ip::tcp::socket sock(io);
+    ip::tcp::resolver rsl(io);
+    char tbuf[30];
+
+    // получение названия
+    char name[255];
+    size_t len = sock.read_some(buffer(name));
+    data_name = string(name, len);
+
+    // получение файла
+    o.open(data_name, ios::binary);
+
+    async_connect(sock, rsl.resolve(ip_serv, "12091"), [this, &sock, &in, &tbuf, &di](const boost::system::error_code& ec, const ip::tcp::endpoint &endpoint){
+        snprintf(tbuf, sizeof(tbuf), "connect to \n", ip_serv);
+        in->append(tbuf);
+        di->redraw();
+
+        bt = sock.read_some(buffer(BUFF));
+        in->append("receiving\n");
+        di->redraw();
+
+        o.write(BUFF, bt);
+        o.close();
+
+        in->append("receive file success\n");
+        di->redraw();
+        });
+
+    io.run();
+}
+
