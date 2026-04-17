@@ -15,7 +15,7 @@ private:
     io_context io;
     size_t bt;
 
-    char BUFF[4096];
+    char BUFF[4096], refBUFF[4096] = {'p'};
     ifstream i;
     ofstream o;
 

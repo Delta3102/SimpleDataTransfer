@@ -9,8 +9,6 @@
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Text_Display.H>
 
-#include <iostream>
-
 // Инициализация объектов
 static Client cl;
 static RelayServer srv;
@@ -18,7 +16,7 @@ static RelayServer srv;
 Fl_Input *input_ip = nullptr;
 Fl_Input *input_path = nullptr;
 Fl_Text_Display *disp = nullptr;
-Fl_Text_Buffer log_buff;
+Fl_Text_Buffer *log_buff = nullptr;
 
 void Interface::serv_clik(Fl_Widget *widget, void *data){
     srv.run(log_buff, disp);
@@ -46,8 +44,8 @@ int Interface::run(){
 
     input_path = new Fl_Input(370, 80, 200, 30, "File name:");
 
-    log_buff.Fl_Text_Buffer();
-    log_buff.text("Start program");
+    log_buff = new Fl_Text_Buffer();
+    log_buff->text("Start program\n");
     
 
     disp = new Fl_Text_Display(50, 200, 540, 200, "log");

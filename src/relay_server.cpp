@@ -1,6 +1,6 @@
 #include "relay_server.hpp"
 
-#include <iostream>
+#include <FL/Fl.H>
 #include <boost/asio.hpp>
 #include <FL/Fl_Text_Display.H>
 
@@ -8,14 +8,29 @@ using namespace std;
 using namespace boost::asio;
 
 void RelayServer::send_data(ip::tcp::socket &sock_inp, ip::tcp::socket &sock_out, Fl_Text_Buffer* &in, Fl_Text_Display *&di){
-    // Чтение
-    bt = sock_inp.read_some(buffer(binBUFF));
-    in->append("Reading 4096 byte\n");
-    di->redraw();
-    // Запись
-    write(sock_out, buffer(binBUFF, bt));
-    in->append("Writing 4096 byte\n");
-    di->redraw();
+    while(true){
+        // Чтение
+        bt = sock_inp.read_some(buffer(binBUFF));
+        in->append("Reading 4096 byte\n");
+        di->redraw();
+        Fl::check();
+        // Запись
+        write(sock_out, buffer(binBUFF, bt));
+        in->append("Writing 4096 byte\n");
+        di->redraw();
+        Fl::check();
+
+         // Чтение
+        bt = sock_out.read_some(buffer(binBUFF));
+        in->append("Reading 4096 byte\n");
+        di->redraw();
+        Fl::check();
+        // Запись
+        write(sock_inp, buffer(binBUFF, bt));
+        in->append("Writing 4096 byte\n");
+        di->redraw();
+        Fl::check();
+    }
 }
 
 void RelayServer::relay(ip::tcp::acceptor &acpt_inp,
@@ -23,14 +38,22 @@ void RelayServer::relay(ip::tcp::acceptor &acpt_inp,
                         ip::tcp::socket &sock_inp,
                         ip::tcp::socket &sock_out,
                         Fl_Text_Buffer* &in,
-                        Fl_Text_Display *&di)
+                        Fl_Text_Display* &di)
 {
     acpt_inp.async_accept(sock_inp, [this, &acpt_out, &sock_out, &sock_inp, &in, &di](boost::system::error_code er){
         in->append("Accept input\n");
         di->redraw();
+        Fl::check();
+
         acpt_out.async_accept(sock_out, [this, &sock_out, &sock_inp, &in, &di](boost::system::error_code er){
             in->append("Accept output\n");
             di->redraw();
+            Fl::check();
+
+            in->append("Server closed for additional connections\n");
+            di->redraw();
+            Fl::check();
+
             send_data(sock_inp, sock_out, in, di);
         });
     });
@@ -48,6 +71,10 @@ void RelayServer::run(Fl_Text_Buffer* &in, Fl_Text_Display *&di){
     ip::tcp::socket sock_inp(io);
     ip::tcp::socket sock_out(io);
     ip::tcp::socket sock_ref(io);
+
+    in->append("Server run\n");
+    di->redraw();
+    Fl::check();
 
     relay(acpt_inp, acpt_out, sock_inp, sock_out, in, di);
 
