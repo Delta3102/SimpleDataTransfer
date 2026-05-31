@@ -1,7 +1,6 @@
+#include "core.hpp"
 #include "interface.hpp"
-#include "client.hpp"
-#include "relay_server.hpp"
-
+#include <string>
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Button.H>
@@ -9,61 +8,54 @@
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Text_Display.H>
 
-// Инициализация объектов
-static Client cl;
-static RelayServer srv;
+using namespace std;
 
-Fl_Input *input_ip = nullptr;
-Fl_Input *input_path = nullptr;
-Fl_Text_Display *disp = nullptr;
-Fl_Text_Buffer *log_buff = nullptr;
+string Interface::get_ip(){
+    return input_ip->value();
+}
+
+string Interface::get_name(){
+    return input_path->value();
+}
 
 void Interface::serv_clik(Fl_Widget *widget, void *data){
-    srv.run(log_buff, disp);
+    auto* obj = static_cast<Core*>(data);
+    obj->start_server();
 }
 
 void Interface::con_clik(Fl_Widget *widget, void *data){
-    cl.ip_serv = input_ip->value();
-
-    cl.receiving(log_buff, disp);
+    auto* obj = static_cast<Core*>(data);
+    obj->reciv();
 }
 
 void Interface::tr_clik(Fl_Widget *widget, void *data){
-    cl.ip_serv = input_ip->value();
-    cl.data_name = input_path->value();
+    auto* obj = static_cast<Core*>(data);
+    obj->transmic();
+}
 
-    cl.transmissons(log_buff, disp);
+void Interface::logging(string text){
+    log_buff->append(text.c_str());
+    log_buff->append("\n");
+    disp->redraw();
+    Fl::check();
+}
+
+void Interface::delstr(){
+    int end = log_buff->length();
+    int start = log_buff->line_start(end-1);
+    log_buff->remove(start, end);
 }
 
 int Interface::run(){
-    Fl_Window *window = new Fl_Window(640, 480, "SDT");
-
-    // Инпут Отпут поля
-    input_ip = new Fl_Input(80, 80, 200, 30, "IP:");
+    //Настройка виджетов
     input_ip->value("127.0.0.1");
-
-    input_path = new Fl_Input(370, 80, 200, 30, "File name:");
-
-    log_buff = new Fl_Text_Buffer();
-    log_buff->text("Start program\n");
-    
-
-    disp = new Fl_Text_Display(50, 200, 540, 200, "log");
     disp->buffer(log_buff);
-
-    // Кнопки
-    Fl_Button *button_serv = new Fl_Button(100, 140, 100, 30, "Server");
-    button_serv->callback(serv_clik);
-
-    Fl_Button *button_con = new Fl_Button(275, 140, 100, 30, "Receiving");
-    button_con->callback(con_clik);
-
-    Fl_Button *button_tr = new Fl_Button(450, 140, 100, 30, "Transmission");
-    button_tr->callback(tr_clik);
-
+    //Настройка кнопок
+    button_serv->callback(serv_clik, contr);
+    button_con->callback(con_clik, contr);
+    button_tr->callback(tr_clik, contr);
     // Закрытие
     window->end();
     window->show();
-
     return Fl::run();
 }

@@ -1,9 +1,6 @@
-#include "relay_server.hpp"
-#include "client.hpp"
-#include "interface.hpp"
+#include "core.hpp"
 
-#include <iostream>
 int main(){
-    Interface intr;
-    intr.run();
+    Core app;
+    app.run();
 }
